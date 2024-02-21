@@ -1,0 +1,68 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum TokenType {
+  RESET_PASSWORD
+  EMAIL_VERIFICATION
+}
+
+enum UserRole {
+  OWNER
+  ADMIN
+  USER
+}
+
+model User {
+  id            Int             @id @default(autoincrement())
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  username      String?
+  email         String          @unique
+  password      String
+  refresh_token String?
+  Token         Token[]
+  WorkspaceUser WorkspaceUser[]
+
+  @@map("users")
+}
+
+model Token {
+  userId         Int
+  user           User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token          String
+  type           TokenType
+  expirationTime DateTime
+
+  @@id([userId])
+  @@map("tokens")
+}
+
+model Workspace {
+  id            Int             @id @default(autoincrement())
+  name          String
+  description   String?
+  createdAt     DateTime        @default(now())
+  workspaceUser WorkspaceUser[]
+
+  @@map("workspaces")
+}
+
+model WorkspaceUser {
+  id          Int       @id @default(autoincrement())
+  userId      Int
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace @relation(onDelete: Cascade, fields: [workspaceId], references: [id])
+  workspaceId Int
+  role        UserRole
+
+  @@map("workspaceusers")
+}
