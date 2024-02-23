@@ -1,17 +1,25 @@
-/*
-  Warnings:
-
-  - You are about to drop the `Token` table. If the table is not empty, all the data it contains will be lost.
-
-*/
 -- CreateEnum
-CREATE TYPE "UserRole" AS ENUM ('OWNER', 'ADMIN', 'USER');
+CREATE TYPE "TokenType" AS ENUM ('RESET_PASSWORD', 'EMAIL_VERIFICATION');
 
--- DropForeignKey
-ALTER TABLE "Token" DROP CONSTRAINT "Token_userId_fkey";
+-- CreateEnum
+CREATE TYPE "WorkspaceUserRole" AS ENUM ('OWNER', 'ADMIN', 'MEMBER');
 
--- DropTable
-DROP TABLE "Token";
+-- CreateEnum
+CREATE TYPE "UserRole" AS ENUM ('USER', 'ADMIN');
+
+-- CreateTable
+CREATE TABLE "users" (
+    "id" SERIAL NOT NULL,
+    "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    "updatedAt" TIMESTAMP(3) NOT NULL,
+    "username" TEXT,
+    "email" TEXT NOT NULL,
+    "password" TEXT NOT NULL,
+    "role" "UserRole" NOT NULL DEFAULT 'USER',
+    "refresh_token" TEXT,
+
+    CONSTRAINT "users_pkey" PRIMARY KEY ("id")
+);
 
 -- CreateTable
 CREATE TABLE "tokens" (
@@ -38,10 +46,13 @@ CREATE TABLE "workspaceusers" (
     "id" SERIAL NOT NULL,
     "userId" INTEGER NOT NULL,
     "workspaceId" INTEGER NOT NULL,
-    "role" "UserRole" NOT NULL,
+    "role" "WorkspaceUserRole" NOT NULL,
 
     CONSTRAINT "workspaceusers_pkey" PRIMARY KEY ("id")
 );
+
+-- CreateIndex
+CREATE UNIQUE INDEX "users_email_key" ON "users"("email");
 
 -- AddForeignKey
 ALTER TABLE "tokens" ADD CONSTRAINT "tokens_userId_fkey" FOREIGN KEY ("userId") REFERENCES "users"("id") ON DELETE CASCADE ON UPDATE CASCADE;

@@ -15,10 +15,15 @@ enum TokenType {
   EMAIL_VERIFICATION
 }
 
-enum UserRole {
+enum WorkspaceUserRole {
   OWNER
   ADMIN
+  MEMBER
+}
+
+enum UserRole {
   USER
+  ADMIN
 }
 
 model User {
@@ -28,6 +33,7 @@ model User {
   username      String?
   email         String          @unique
   password      String
+  role          UserRole        @default(USER)
   refresh_token String?
   Token         Token[]
   WorkspaceUser WorkspaceUser[]
@@ -57,12 +63,12 @@ model Workspace {
 }
 
 model WorkspaceUser {
-  id          Int       @id @default(autoincrement())
+  id          Int               @id @default(autoincrement())
   userId      Int
-  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  workspace   Workspace @relation(onDelete: Cascade, fields: [workspaceId], references: [id])
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workspace   Workspace         @relation(onDelete: Cascade, fields: [workspaceId], references: [id])
   workspaceId Int
-  role        UserRole
+  role        WorkspaceUserRole
 
   @@map("workspaceusers")
 }
