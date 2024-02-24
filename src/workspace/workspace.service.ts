@@ -9,6 +9,8 @@ import { Workspace, WorkspaceUserRole } from '@prisma/client';
 import { UserRole } from 'src/common/models/role.enum';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { AddOrRemoveMemberDto } from './dto/add-or-remove-member.dto';
+import { WorkspaceUserI } from './models/workspace-user.interface';
 
 @Injectable()
 export class WorkspaceService {
@@ -197,5 +199,112 @@ export class WorkspaceService {
         id: workspaceUser.workspaceId,
       },
     });
+  }
+
+  async getWorkspaceMembers(workspaceId: number): Promise<WorkspaceUserI[]> {
+    const workspaces = await this.prismaService.workspace.findFirst({
+      where: {
+        id: workspaceId,
+      },
+      include: {
+        workspaceUser: {
+          include: {
+            user: true,
+          },
+        },
+      },
+    });
+
+    if (!workspaces) throw new NotFoundException('Workspace not found');
+
+    const workspaceUsers = workspaces.workspaceUser.map((workpaceUser) => ({
+      userId: workpaceUser.user.id,
+      role: workpaceUser.role,
+      email: workpaceUser.user.email,
+      username: workpaceUser.user.username,
+    }));
+
+    return workspaceUsers;
+  }
+
+  async addMemberToWorkspace(
+    userId: number,
+    dto: AddOrRemoveMemberDto,
+  ): Promise<{ memberId: number; msg: string }> {
+    const { memberId, workspaceId } = dto;
+
+    if (!(await this.checkMemberIsOwnerOrAdmin(userId, workspaceId))) {
+      throw new UnauthorizedException('Only owners or admins can add members');
+    }
+
+    const workspaceUser = await this.prismaService.workspaceUser.findFirst({
+      where: {
+        userId: memberId,
+        workspaceId,
+      },
+    });
+
+    if (!workspaceUser) {
+      await this.prismaService.workspaceUser.create({
+        data: {
+          userId: memberId,
+          workspaceId,
+          role: WorkspaceUserRole.MEMBER,
+        },
+      });
+
+      return { memberId, msg: 'Member Added Successfuly' };
+    }
+
+    return { memberId, msg: 'Member already Added' };
+  }
+
+  async removeMemberFromWorkspace(
+    userId: number,
+    dto: AddOrRemoveMemberDto,
+  ): Promise<void> {
+    const { memberId, workspaceId } = dto;
+
+    if (!(await this.checkMemberIsOwnerOrAdmin(userId, workspaceId))) {
+      throw new UnauthorizedException(
+        'Only owners or admins can remove members',
+      );
+    }
+
+    const workspaceUser = await this.prismaService.workspaceUser.findFirst({
+      where: {
+        userId: memberId,
+        workspaceId,
+      },
+    });
+
+    if (!workspaceUser) {
+      throw new NotFoundException('Member not found in this workspace');
+    }
+
+    if (workspaceUser.role === WorkspaceUserRole.OWNER) {
+      throw new UnauthorizedException('Cannot remove owner of workspace');
+    }
+
+    await this.prismaService.workspaceUser.delete({
+      where: {
+        id: workspaceUser.id,
+      },
+    });
+  }
+
+  async checkMemberIsOwnerOrAdmin(
+    memberId: number,
+    workspaceId: number,
+  ): Promise<boolean> {
+    const workspaceUser = await this.prismaService.workspaceUser.findFirst({
+      where: {
+        userId: memberId,
+        workspaceId,
+        role: { in: [WorkspaceUserRole.ADMIN, WorkspaceUserRole.OWNER] },
+      },
+    });
+
+    return !!workspaceUser;
   }
 }

@@ -20,6 +20,7 @@ import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { PaginatedWorkspaces } from './models/paginated-workspace.type';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { Workspace } from '@prisma/client';
+import { AddOrRemoveMemberDto } from './dto/add-or-remove-member.dto';
 
 @UseGuards(JwtGuard)
 @Controller('workspace')
@@ -87,5 +88,26 @@ export class WorkspaceController {
     @GetUser('id') userId: number,
   ): Promise<void> {
     return this.workspaceService.deleteWorkspace(userId, workspaceId);
+  }
+
+  @Get(':workspaceId/members')
+  getWorkspaceMembers(@Param('workspaceId') workspaceId: number) {
+    return this.workspaceService.getWorkspaceMembers(workspaceId);
+  }
+
+  @Post('add-member')
+  addMemberToWorkspace(
+    @GetUser('id') userId: number,
+    @Body() dto: AddOrRemoveMemberDto,
+  ): Promise<{ memberId: number; msg: string }> {
+    return this.workspaceService.addMemberToWorkspace(userId, dto);
+  }
+
+  @Patch('remove-member')
+  removeMemberFromWorkspace(
+    @GetUser('id') userId: number,
+    @Body() dto: AddOrRemoveMemberDto,
+  ): Promise<void> {
+    return this.workspaceService.removeMemberFromWorkspace(userId, dto);
   }
 }
