@@ -1,10 +1,16 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { PrismaService } from 'src/prisma/prisma.service';
 import { CreateUserDto } from 'src/users/dto/create-user.dto';
 import { UsersRepository } from 'src/users/users.repository';
 import { LoginDto } from 'src/users/dto/login.dto';
+import { TokenType } from './models/token.model';
+import * as argon from 'argon2';
 
 @Injectable()
 export class AuthService {
@@ -57,5 +63,33 @@ export class AuthService {
     return {
       access_token,
     };
+  }
+
+  async verifyUser(email: string, token: string) {
+    const user = await this.prisma.user.findFirst({
+      where: {
+        email,
+      },
+    });
+
+    const dbToken = await this.prisma.token.findFirst({
+      where: {
+        userId: user.id,
+        type: TokenType.EMAIL_VERIFICATION,
+      },
+    });
+
+    const tokenMatch = await argon.verify(dbToken.token, token);
+
+    if (!user || !tokenMatch) {
+      throw new NotFoundException('Invalid activation link');
+    }
+    const currentTime = new Date();
+
+    if (dbToken.expirationTime > currentTime) {
+      await this.usersRepository.activateUser(user.id);
+    } else {
+      throw new ForbiddenException('Token is expired');
+    }
   }
 }

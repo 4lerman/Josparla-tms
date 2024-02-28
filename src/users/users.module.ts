@@ -1,10 +1,10 @@
 import { Module } from '@nestjs/common';
 import { UsersController } from './users.controller';
 import { UsersRepository } from './users.repository';
-import { EmailModule } from 'src/email/email.module';
+import { QueueModule } from '../queues/queue.module';
 
 @Module({
-  imports: [EmailModule],
+  imports: [QueueModule],
   controllers: [UsersController],
   providers: [UsersRepository],
 })

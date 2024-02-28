@@ -2,7 +2,11 @@ import { PassportStrategy } from '@nestjs/passport';
 import { ExtractJwt, Strategy } from 'passport-jwt';
 import { PrismaService } from '../../prisma/prisma.service';
 import { ConfigService } from '@nestjs/config';
-import { Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+} from '@nestjs/common';
 import { User } from '@prisma/client';
 
 @Injectable()
@@ -22,6 +26,8 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
 
     delete user.password;
-    return user;
+
+    if (user.is_active) return user;
+    else throw new ForbiddenException('User is not activated');
   }
 }

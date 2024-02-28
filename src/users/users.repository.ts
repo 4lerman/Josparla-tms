@@ -11,15 +11,15 @@ import * as argon from 'argon2';
 import { LoginDto } from './dto/login.dto';
 import * as crypto from 'crypto';
 import { ConfigService } from '@nestjs/config';
-import { EmailService } from 'src/email/email.service';
 import { EditUserDto } from './dto/edit-user.dto';
+import { ProducerService } from '../queues/producer.service';
 
 @Injectable()
 export class UsersRepository {
   constructor(
     private readonly prismaService: PrismaService,
     private readonly configService: ConfigService,
-    private readonly emailService: EmailService,
+    private readonly producerService: ProducerService,
   ) {}
 
   clientURL = this.configService.get('CLIENT_URL');
@@ -42,6 +42,8 @@ export class UsersRepository {
     });
 
     delete user.password;
+
+    await this.generateToken(dto.email, TokenType.EMAIL_VERIFICATION);
 
     return user;
   }
@@ -156,7 +158,29 @@ export class UsersRepository {
     const username = user.username;
 
     const link = `${this.clientURL}/${linkType}?token=${newToken}&id=${user.id}`;
-    await this.emailService.sendEmail({ email, username }, type, link);
+    await this.producerService.addToEmailQueue({
+      user: { username, email },
+      type,
+      link,
+    });
     return link;
+  }
+
+  async activateUser(userId: number): Promise<void> {
+    await this.prismaService.user.update({
+      where: {
+        id: userId,
+      },
+      data: {
+        is_active: true,
+      },
+    });
+
+    await this.prismaService.token.delete({
+      where: {
+        userId,
+        type: TokenType.EMAIL_VERIFICATION,
+      },
+    });
   }
 }
