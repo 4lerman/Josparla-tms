@@ -27,6 +27,7 @@ describe('Workspace Controller', () => {
             getWorkspacesWhereMember: jest.fn(),
             createWorkspace: jest.fn(),
             updateWorkspace: jest.fn(),
+            deleteWorkspace: jest.fn(),
           },
         },
         {
@@ -40,6 +41,7 @@ describe('Workspace Controller', () => {
               count: jest.fn(),
               create: jest.fn(),
               update: jest.fn(),
+              delete: jest.fn(),
             },
             workspaceUser: {
               findMany: jest.fn(),
@@ -247,6 +249,35 @@ describe('Workspace Controller', () => {
 
       await expect(
         controller.updateWorkspace(workpaceId, userId, dto),
+      ).rejects.toThrow(UnauthorizedException);
+    });
+  });
+
+  describe('deleteWorkspace', () => {
+    it('should delete workspace', async () => {
+      const userId = 1;
+      const workspaceId = 1;
+
+      // Mocking workspaceUser to be found and to be the owner
+      jest.spyOn(service, 'deleteWorkspace').mockResolvedValue();
+
+      await controller.deleteWorkspace(userId, workspaceId);
+
+      // Verify that workspace deletion method is called
+      expect(service.deleteWorkspace).toHaveBeenCalledWith(userId, workspaceId);
+    });
+
+    it('should throw UnauthorizedException if user is not owner', async () => {
+      const userId = 1;
+      const workspaceId = 1;
+
+      // Mocking workspaceUser to be found but not an owner
+      jest
+        .spyOn(service, 'deleteWorkspace')
+        .mockRejectedValueOnce(new UnauthorizedException());
+
+      await expect(
+        controller.deleteWorkspace(userId, workspaceId),
       ).rejects.toThrow(UnauthorizedException);
     });
   });
