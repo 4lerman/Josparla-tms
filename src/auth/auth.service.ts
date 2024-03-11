@@ -5,10 +5,10 @@ import {
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
-import { PrismaService } from 'src/prisma/prisma.service';
-import { CreateUserDto } from 'src/users/dto/create-user.dto';
-import { UsersRepository } from 'src/users/users.repository';
-import { LoginDto } from 'src/users/dto/login.dto';
+import { PrismaService } from '../prisma/prisma.service';
+import { CreateUserDto } from '../users/dto/create-user.dto';
+import { UsersRepository } from '../users/users.repository';
+import { LoginDto } from '../users/dto/login.dto';
 import { TokenType } from './models/token.model';
 import * as argon from 'argon2';
 

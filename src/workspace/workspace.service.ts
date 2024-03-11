@@ -6,7 +6,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { PaginatedWorkspaces } from './models/paginated-workspace.type';
 import { Workspace, WorkspaceUserRole } from '@prisma/client';
-import { UserRole } from 'src/common/models/role.enum';
+import { UserRole } from '../common/models/role.enum';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { AddOrRemoveMemberDto } from './dto/add-or-remove-member.dto';

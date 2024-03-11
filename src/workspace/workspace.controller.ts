@@ -9,13 +9,13 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { JwtGuard } from 'src/auth/guard/jwt.guard';
+import { JwtGuard } from '../auth/guard/jwt.guard';
 import { WorkspaceService } from './workspace.service';
 import { PaginationParamsDto } from '../common/dto/pagination-params.dto';
 import { Roles } from '../common/decorator/roles.decorator';
 import { UserRole } from '../common/models/role.enum';
-import { RoleGuard } from 'src/common/guards/role.guard';
-import { GetUser } from 'src/common/decorator/get-user.decorator';
+import { RoleGuard } from '../common/guards/role.guard';
+import { GetUser } from '../common/decorator/get-user.decorator';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { PaginatedWorkspaces } from './models/paginated-workspace.type';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';

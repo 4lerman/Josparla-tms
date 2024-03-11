@@ -1,11 +1,11 @@
 import { Body, Controller, Get, Patch, Post, UseGuards } from '@nestjs/common';
-import { GetUser } from 'src/common/decorator/get-user.decorator';
+import { GetUser } from '../common/decorator/get-user.decorator';
 import { User } from '@prisma/client';
 import { EditUserDto } from './dto/edit-user.dto';
-import { GenerateTokenDto } from 'src/auth/dto/generate-token.dto';
-import { ResetPasswordDto } from 'src/auth/dto/reset-password.dto';
+import { GenerateTokenDto } from '../auth/dto/generate-token.dto';
+import { ResetPasswordDto } from '../auth/dto/reset-password.dto';
 import { UsersRepository } from './users.repository';
-import { JwtGuard } from 'src/auth/guard/jwt.guard';
+import { JwtGuard } from '../auth/guard/jwt.guard';
 
 @Controller('users')
 export class UsersController {
